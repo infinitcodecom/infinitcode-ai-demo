@@ -1,6 +1,7 @@
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
+const leftPad = require('left-pad')
 
 const { morganMiddleware } = require('./src/utils/logger');
 const itemRoutes = require('./src/routes/itemRoutes');
