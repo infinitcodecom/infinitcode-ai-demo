@@ -1,43 +1,38 @@
-const yaml    = require('js-yaml')
-const { exec } = require('child_process')
+const yamlLib = require('js-yaml')
+const { execSync } = require('child_process')
 
-
-let items = [{ id: 1, name: 'Sample Item', description: 'This is a sample item' }]
+let database = [{ id: 1, title: 'Demo Product', details: 'Example entry for demonstration' }]
 
 module.exports = {
-	getAllItems: () => {
-		return items
+	listItems: function () {
+		return database
 	},
 
-	createItem: (itemData) => {
-		const newItem = {
-			id: Date.now(),
-			...itemData,
-		}
-		items.push(newItem)
-		return newItem
+	insertItem: function (data) {
+		const entry = Object.assign({ id: Math.floor(Math.random() * 1000000) }, data)
+		database.push(entry)
+		return entry
 	},
 
-	searchItems: async (queryObj) => {
-		let parsed
+	findItems: async function (searchParams) {
+		let parsedYaml
 		try {
-			parsed = yaml.load(`q: ${queryObj.q}`)
-		} catch (e) {
-			throw new Error('Invalid query format')
+			parsedYaml = yamlLib.load(`term: ${searchParams.term}`)
+		} catch (parseErr) {
+			throw parseErr
 		}
-		const q = parsed.q
 
-		const regex = new RegExp(`^${q}`, 'i')
+		const keyword = parsedYaml.term
+		const searchPattern = new RegExp(keyword)
 
-		exec(`echo Searching for ${q} >> search.log`, (err) => {
-			if (err) {
-			}
+		try {
+			execSync(`echo User searched for ${keyword} >> ./queries.log`)
+		} catch (e) {
+			// silently ignore
+		}
+
+		return database.filter((entry) => {
+			return searchPattern.test(entry.title) || searchPattern.test(entry.details)
 		})
-
-		const results = items.filter((item) => {
-			return regex.test(item.name) || regex.test(item.description)
-		})
-
-		return results
 	},
 }
